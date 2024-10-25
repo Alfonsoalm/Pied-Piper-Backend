@@ -8,6 +8,7 @@ const connection = async() => {
 
         mongoose.set('strictQuery', false); // Opción recomendada por Mongoose 7
         await mongoose.connect("mongodb://localhost:27017/mi_redsocial",
+        // await mongoose.connect("tcp://2.tcp.eu.ngrok.io:13479",
             // useNewUrlParser: true,
             // useUnifiedTopology: true,
             // useCreateIndex: true

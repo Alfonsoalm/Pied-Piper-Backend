@@ -19,10 +19,10 @@ const puerto = 3900;
 
 // Configurar cors para permitir solo solicitudes de tu frontend
 app.use(cors({
-    origin: 'http://localhost:5173', // Permitir solo este origen (el puerto donde se ejecuta React)
+    origin: ['http://localhost:5173'], // 'https://2284-87-223-126-135.ngrok-free.app'], // Lista de orígenes permitidos
     credentials: true, // Permitir envío de cookies o autenticación
-  }));
-  
+}));
+
 
 // Convertir los datos del body a objetos js
 app.use(express.json());
