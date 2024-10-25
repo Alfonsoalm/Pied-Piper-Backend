@@ -1,0 +1,28 @@
+{
+  "name": "api-rest-red-social",
+  "version": "1.0.0",
+  "description": "API REST con Node, Mongo, Express, JWT para una red social",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "Victor Robles WEB",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "bcrypt-nodejs": "^0.0.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.30.1",
+    "mongoose": "^6.13.3",
+    "mongoose-pagination": "^1.0.0",
+    "multer": "^1.4.5-lts.1",
+    "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
