@@ -15,7 +15,7 @@
 // const validate = require("../helpers/validate");
 
 // Importar dependencias y modulos
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import mongoosePagination from "mongoose-pagination";
 import fs from "fs";
 import path from "path";

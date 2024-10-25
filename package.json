@@ -11,8 +11,8 @@
   "author": "Victor Robles WEB",
   "license": "MIT",
   "dependencies": {
-    "bcrypt": "^5.1.0",
     "bcrypt-nodejs": "^0.0.3",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "jwt-simple": "^0.5.6",
