@@ -1,6 +1,3 @@
-// Importar dependencias
-// const jwt = require("jwt-simple");
-// const moment = require("moment");
 import jwt from "jwt-simple";
 import moment from "moment";
 
@@ -24,7 +21,6 @@ const createToken = (user) => {
     // Devolver jwt token codificado
     return jwt.encode(payload, secret);
 }
-
 
 // module.exports = {
 export default {
