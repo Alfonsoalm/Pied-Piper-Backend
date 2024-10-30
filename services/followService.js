@@ -45,7 +45,6 @@ const followThisUser = async (identityUserId, profileUserId) => {
     };
 }
 
-// module.exports = {
 export default {
     followUserIds,
     followThisUser

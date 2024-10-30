@@ -1,39 +1,24 @@
-import express from "express";
-import multer from "multer";
-import PublicationContoller from "../controllers/publication.js";
-import check from "../middlewares/auth.js";
+// Importar modulos
 import fs from "fs";
 import path from "path";
+// Importar modelos
 import Publication from "../models/publication.js";
+// Importar servicios
 import followService from "../services/followService.js";
 
-const router = express.Router();
-
-// Configuracion de subida
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "./uploads/publications/")
-    },
-    filename: (req, file, cb) => {
-        cb(null, "pub-"+Date.now()+"-"+file.originalname);
-    }
-});
-const uploads = multer({storage});
-
-<<<<<<< Updated upstream
-
-router.post("/save", check.auth, save);
 // Guardar publicacion
 const save = (req, res) => {
     // Recoger datos del body
     const params = req.body;
-    // Si no me llegan dar respuesta negativa
+    // SI no me llegan dar respuesta negativa
     if (!params.text) return res.status(400).send({ status: "error", "message": "Debes enviar el texto de la publicacion." });
     // Crear y rellenar el objeto del modelo
     let newPublication = new Publication(params);
     newPublication.user = req.user.id;
+    // Guardar objeto en bbdd
     newPublication.save((error, publicationStored) => {
         if (error || !publicationStored) return res.status(400).send({ status: "error", "message": "No se ha guardado la publicación." });
+        // Devolver respuesta
         return res.status(200).send({
             status: "success",
             message: "Publicación guardada",
@@ -42,20 +27,20 @@ const save = (req, res) => {
     });
 }
 
-
-router.get("/detail/:id", check.auth, detail);
 // Sacar una publicacion
 const detail = (req, res) => {
     // Sacar id de publicacion de la url
     const publicationId = req.params.id;
     // Find con la condicion del id
     Publication.findById(publicationId, (error, publicationStored) => {
+
         if (error || !publicationStored) {
             return res.status(404).send({
                 status: "error",
                 message: "No existe la publicacion"
             })
         }
+        // Devolver respuesta
         return res.status(200).send({
             status: "success",
             message: "Mostrar publicacion",
@@ -64,8 +49,6 @@ const detail = (req, res) => {
     });
 }
 
-
-router.delete("/remove/:id", check.auth, remove);
 // Eliminar publicaciones
 const remove = (req, res) => {
     // Sacar el id del publicacion a eliminar
@@ -78,16 +61,18 @@ const remove = (req, res) => {
                 message: "No se ha eliminado la publicacion"
             });
         }
+    
+        // Devolver respuesta
         return res.status(200).send({
             status: "success",
             message: "Publicación eliminada correctamente",
             publication: publicationId
         });
     });
+    
+
 }
 
-
-router.get("/user/:id/:page?", check.auth, user);
 const user = (req, res) => {
     // Sacar el id de usuario
     const userId = req.params.id;
@@ -100,6 +85,7 @@ const user = (req, res) => {
         .sort("-created_at")
         .populate('user', '-password -__v -role -email')
         .paginate(page, itemsPerPage, (error, publications, total) => {
+
             // Si hay un error en la consulta o no hay publicaciones, devolvemos un array vacío y total en 0
             if (error) {
                 return res.status(500).send({
@@ -107,6 +93,7 @@ const user = (req, res) => {
                     message: "Error en la petición de publicaciones"
                 });
             }
+
             if (!publications || publications.length === 0) {
                 return res.status(200).send({
                     status: "success",
@@ -116,6 +103,8 @@ const user = (req, res) => {
                     pages: 0, // No hay páginas para mostrar
                 });
             }
+
+            // Devolver respuesta en caso de éxito
             return res.status(200).send({
                 status: "success",
                 message: "Publicaciones del perfil de un usuario",
@@ -128,7 +117,6 @@ const user = (req, res) => {
 };
 
 
-router.post("/upload/:id", [check.auth, uploads.single("file0")], upload);
 // Subir ficheros
 const upload = (req, res) => {
     // Sacar publication id
@@ -173,8 +161,6 @@ const upload = (req, res) => {
     });
 }
 
-
-router.get("/media/:file", media); //cambio
 // Devolver archivos multimedia imagenes
 const media = (req, res) => {
     // Sacar el parametro de la url
@@ -192,10 +178,9 @@ const media = (req, res) => {
         // Devolver un file
         return res.sendFile(path.resolve(filePath));
     });
+
 }
 
-
-router.get("/feed/:page?", check.auth, feed);
 // Listar todas las publicaciones (FEED)
 const feed = async (req, res) => {
     // Sacar la pagina actual
@@ -237,17 +222,14 @@ const feed = async (req, res) => {
     }
 }
 
-
-// Exportar router
-=======
-// Definir rutas
-router.post("/save", check.auth, PublicationContoller.save);
-router.get("/detail/:id", check.auth, PublicationContoller.detail);
-router.delete("/remove/:id", check.auth, PublicationContoller.remove);
-router.get("/user/:id/:page?", check.auth, PublicationContoller.user);
-router.post("/upload/:id", [check.auth, uploads.single("file0")], PublicationContoller.upload);
-router.get("/media/:file", PublicationContoller.media); //cambio
-router.get("/feed/:page?", check.auth, PublicationContoller.feed);
-
->>>>>>> Stashed changes
-export default router;
+// Exportar acciones
+export default {
+    pruebaPublication,
+    save,
+    detail,
+    remove,
+    user,
+    upload,
+    media,
+    feed
+}

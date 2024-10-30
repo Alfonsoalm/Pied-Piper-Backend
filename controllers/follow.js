@@ -1,12 +1,9 @@
-import express from "express";
-import check from "../middlewares/auth.js";
+// Importar modelo
 import Follow from "../models/follow.js";
 import followService from "../services/followService.js";
-const router = express.Router();
 
-<<<<<<< Updated upstream
-router.post("/save", check.auth, save);
 // Accion de guardar un follow (accion seguir)
+// Ruta: /save
 const save = (req, res) => {
     // Conseguir datos por body
     const params = req.body;
@@ -17,6 +14,7 @@ const save = (req, res) => {
         user: identity.id,
         followed: params.followed
     });
+
     // Guardar objeto en bbdd
     userToFollow.save((error, followStored) => {
         if (error || !followStored) {
@@ -33,8 +31,8 @@ const save = (req, res) => {
     });
 }
 
-router.delete("/unfollow/:id", check.auth, unfollow);
 // Accion de borrar un follow (accion dejar de seguir)
+// Ruta: /unfollow/:id
 const unfollow = (req, res) => {
     // Recoger el id del usuario identificado
     const userId = req.user.id;
@@ -58,7 +56,7 @@ const unfollow = (req, res) => {
     });
 }
 
-router.get("/following/:id?/:page?", check.auth, following);
+// Ruta: /following/:id?/:page?
 // Acción listado de usuarios que cualquier usuario está siguiendo (siguiendo)
 const following = (req, res) => {
     // Sacar el id del usuario identificado
@@ -89,8 +87,7 @@ const following = (req, res) => {
         })
 }
 
-
-router.get("/followers/:id?/:page?", check.auth, followers);
+// Ruta: /followers/:id?/:page?
 // Acción listado de usuarios que siguen a cualquier otro usuario (soy seguido, mis seguidores)
 const followers = (req, res) => {
     // Sacar el id del usuario identificado
@@ -118,14 +115,11 @@ const followers = (req, res) => {
         })
 }
 
-
-=======
-// Definir rutas
-router.post("/save", check.auth, FollowController.save);
-router.delete("/unfollow/:id", check.auth, FollowController.unfollow);
-router.get("/following/:id?/:page?", check.auth, FollowController.following);
-router.get("/followers/:id?/:page?", check.auth, FollowController.followers);
-
->>>>>>> Stashed changes
-// Exportar router
-export default router;
+// Exportar acciones
+export default {
+    pruebaFollow,
+    save,
+    unfollow,
+    following,
+    followers
+}

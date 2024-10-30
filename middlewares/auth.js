@@ -1,10 +1,3 @@
-// // Importar modulos
-// const jwt = require("jwt-simple");
-// const moment = require("moment");
-// // Importar clave secreta
-// const libjwt = require("../services/jwt");
-// const secret = libjwt.secret;
-
 // Importar modulos
 import jwt from "jwt-simple";
 import moment from "moment";

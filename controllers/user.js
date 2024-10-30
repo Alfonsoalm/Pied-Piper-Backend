@@ -1,41 +1,22 @@
-import express from "express";
-import multer from "multer";
-import UserController from "../controllers/user.js";
-import check from "../middlewares/auth.js";
+// Importar dependencias y modulos
 import bcrypt from "bcryptjs";
+import mongoosePagination from "mongoose-pagination";
 import fs from "fs";
 import path from "path";
+// Importar modelos
 import User from "../models/user.js";
 import Follow from "../models/follow.js";
 import Publication from "../models/publication.js";
+// Importar servicios
 import jwt from "../services/jwt.js";
 import followService from "../services/followService.js";
 import validate from "../helpers/validate.js";
 
-const router = express.Router();
-
-// Configuracion de subida
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "./uploads/avatars/")
-    },
-    filename: (req, file, cb) => {
-        cb(null, "avatar-"+Date.now()+"-"+file.originalname);
-    }
-});
-const uploads = multer({storage});
-
-<<<<<<< Updated upstream
-
-=======
-// Definir rutas
->>>>>>> Stashed changes
-// Ruta para guardar datos de nuevo usuario a la base de datos
-router.post("/register", register);
-// Registro de usuario
+// Registro de usuarios
 const register = (req, res) => {
     // Recoger datos de la peticion
     let params = req.body;
+
     // Comprobar que me llegan bien (+ validacion)
     if (!params.name || !params.email || !params.password || !params.nick) {
         return res.status(400).json({
@@ -43,6 +24,7 @@ const register = (req, res) => {
             message: "Faltan datos por enviar",
         });
     }
+
     // Validación avanzada
     try{
         validate(params);
@@ -52,6 +34,7 @@ const register = (req, res) => {
             message: "Valición no superada",
         });
     }
+    
     // Control usuarios duplicados
     User.find({
         $or: [
@@ -59,13 +42,16 @@ const register = (req, res) => {
             { nick: params.nick.toLowerCase() }
         ]
     }).exec(async (error, users) => {
+
         if (error) return res.status(500).json({ status: "error", message: "Error en la consulta de usuarios" });
+
         if (users && users.length >= 1) {
             return res.status(200).send({
                 status: "success",
                 message: "El usuario ya existe"
             });
         }
+
         // Cifrar la contraseña
         let pwd = await bcrypt.hash(params.password, 10);
         params.password = pwd;
@@ -88,8 +74,6 @@ const register = (req, res) => {
     });
 }
 
-
-router.post("/login", login);
 const login = (req, res) => {
     // Recoger parametros body
     let params = req.body;
@@ -128,11 +112,10 @@ const login = (req, res) => {
         });
 }
 
-
-router.get("/profile/:id", check.auth, profile);
 const profile = (req, res) => {
     // Recibir el parametro del id de usuario por la url
     const id = req.params.id;
+    // Consulta para sacar los datos del usuario
     User.findById(id)
         .select({ password: 0, role: 0 })
         .exec(async (error, userProfile) => {
@@ -154,8 +137,6 @@ const profile = (req, res) => {
         });
 }
 
-
-router.get("/list/:page?", check.auth, list);
 const list = (req, res) => {
     // Controlar en que pagina estamos
     let page = 1;
@@ -189,18 +170,15 @@ const list = (req, res) => {
     });
 }
 
-router.put("/update", check.auth, update);
 const update = (req, res) => {
     // Recoger info del usuario a actualizar
     let userIdentity = req.user;
     let userToUpdate = req.body;
-
     // Eliminar campos sobrantes
     delete userToUpdate.iat;
     delete userToUpdate.exp;
     delete userToUpdate.role;
     delete userToUpdate.image;
-
     // Comprobar si el usuario ya existe
     User.find({
         $or: [
@@ -247,7 +225,6 @@ const update = (req, res) => {
     });
 }
 
-router.post("/upload", [check.auth, uploads.single("file0")], upload);
 const upload = (req, res) => {
     // Recoger el fichero de imagen y comprobar que existe
     if (!req.file) {
@@ -289,8 +266,6 @@ const upload = (req, res) => {
     });
 }
 
-
-router.get("/avatar/:file", avatar);
 const avatar = (req, res) => {
     // Sacar el parametro de la url
     const file = req.params.file;
@@ -304,12 +279,12 @@ const avatar = (req, res) => {
                 message: "No existe la imagen"
             });
         }
+        // Devolver un file
         return res.sendFile(path.resolve(filePath));
     });
 }
 
-
-router.get("/counters/:id", check.auth, counters);
+// añadido
 const counters = async (req, res) => {
     let userId = req.user.id;
     if (req.params.id) {
@@ -334,5 +309,15 @@ const counters = async (req, res) => {
     }
 }
 
-// Exportar router
-export default router;
+// Exportar acciones
+export default {
+    pruebaUser,
+    register,
+    login,
+    profile,
+    list,
+    update,
+    upload,
+    avatar,
+    counters
+}
