@@ -4,7 +4,6 @@ import Follow from "../models/follow.js";
 import followService from "../services/followService.js";
 const router = express.Router();
 
-<<<<<<< Updated upstream
 router.post("/save", check.auth, save);
 // Accion de guardar un follow (accion seguir)
 const save = (req, res) => {
@@ -119,13 +118,5 @@ const followers = (req, res) => {
 }
 
 
-=======
-// Definir rutas
-router.post("/save", check.auth, FollowController.save);
-router.delete("/unfollow/:id", check.auth, FollowController.unfollow);
-router.get("/following/:id?/:page?", check.auth, FollowController.following);
-router.get("/followers/:id?/:page?", check.auth, FollowController.followers);
-
->>>>>>> Stashed changes
 // Exportar router
 export default router;

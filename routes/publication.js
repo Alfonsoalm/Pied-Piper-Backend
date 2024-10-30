@@ -1,6 +1,5 @@
 import express from "express";
 import multer from "multer";
-import PublicationContoller from "../controllers/publication.js";
 import check from "../middlewares/auth.js";
 import fs from "fs";
 import path from "path";
@@ -19,8 +18,6 @@ const storage = multer.diskStorage({
     }
 });
 const uploads = multer({storage});
-
-<<<<<<< Updated upstream
 
 router.post("/save", check.auth, save);
 // Guardar publicacion
@@ -239,15 +236,4 @@ const feed = async (req, res) => {
 
 
 // Exportar router
-=======
-// Definir rutas
-router.post("/save", check.auth, PublicationContoller.save);
-router.get("/detail/:id", check.auth, PublicationContoller.detail);
-router.delete("/remove/:id", check.auth, PublicationContoller.remove);
-router.get("/user/:id/:page?", check.auth, PublicationContoller.user);
-router.post("/upload/:id", [check.auth, uploads.single("file0")], PublicationContoller.upload);
-router.get("/media/:file", PublicationContoller.media); //cambio
-router.get("/feed/:page?", check.auth, PublicationContoller.feed);
-
->>>>>>> Stashed changes
 export default router;

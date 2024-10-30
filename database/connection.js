@@ -1,8 +1,4 @@
 import mongoose from "mongoose";
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 const connection = async() => {
     try{
         mongoose.set('strictQuery', false); // Opción recomendada por Mongoose 7

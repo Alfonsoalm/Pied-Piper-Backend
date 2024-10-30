@@ -1,6 +1,5 @@
 import express from "express";
 import multer from "multer";
-import UserController from "../controllers/user.js";
 import check from "../middlewares/auth.js";
 import bcrypt from "bcryptjs";
 import fs from "fs";
@@ -25,11 +24,6 @@ const storage = multer.diskStorage({
 });
 const uploads = multer({storage});
 
-<<<<<<< Updated upstream
-
-=======
-// Definir rutas
->>>>>>> Stashed changes
 // Ruta para guardar datos de nuevo usuario a la base de datos
 router.post("/register", register);
 // Registro de usuario
