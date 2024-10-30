@@ -1,4 +1,3 @@
-// const Follow = require("../models/follow");
 import Follow from"../models/follow.js";
 
 const followUserIds = async (identityUserId) => {
@@ -20,7 +19,6 @@ const followUserIds = async (identityUserId) => {
         });
 
         let followersClean = [];
-
         followers.forEach(follow => {
             followersClean.push(follow.user);
         });
