@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2"; // Importa el plugin
 
 const UserSchema = new Schema({
     name: {
@@ -33,4 +34,7 @@ const UserSchema = new Schema({
     }
 });
 
-export default model("User", UserSchema, "users");
+// Aplicar el plugin de paginación al esquema
+UserSchema.plugin(mongoosePaginate);
+
+export default model("UserModel", UserSchema, "users");

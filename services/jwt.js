@@ -19,10 +19,6 @@ const createToken = (user) => {
     // Devolver jwt token codificado
     return jwt.encode(payload, secret);
 }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 // module.exports = {
 export default {
     secret,

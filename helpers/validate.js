@@ -1,8 +1,15 @@
-// const validator = require("validator");
+// Backend/helpers/validate.js
 import validator from "validator";
 
-
 const validate = (params) => {
+    // Validación inicial de campos requeridos
+    if (!params.name || !params.email || !params.password || !params.nick) {
+        return res.status(400).json({
+            status: "error",
+            message: "Faltan datos por enviar",
+        });
+    }
+
     let name = !validator.isEmpty(params.name) &&
         validator.isLength(params.name, { min: 3, max: undefined }) &&
         validator.isAlpha(params.name, "es-ES");
@@ -21,7 +28,6 @@ const validate = (params) => {
 
     if(params.bio){
         let bio = validator.isLength(params.bio, { min: undefined, max: 255 });
-
         if (!bio) {
             throw new Error("No se ha superado la validación");
         } else {
@@ -29,7 +35,6 @@ const validate = (params) => {
         }
     }
    
-
     if (!name || !surname || !nick || !email || !password) {
         throw new Error("No se ha superado la validación");
     } else {
@@ -37,6 +42,4 @@ const validate = (params) => {
     }
 }
 
-// module.exports = validate;
-
-export default { validate };
+export default validate;

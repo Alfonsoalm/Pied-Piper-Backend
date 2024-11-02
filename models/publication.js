@@ -3,7 +3,7 @@ import { Schema, model } from "mongoose";
 const PublicationSchema = new Schema({
     user: {
         type: Schema.ObjectId,
-        ref: "User"
+        ref: "UserModel"  // Cambiado de "User" a "UserModel" para coincidir con el nombre del modelo exportado
     },
     text: {
         type: String,
@@ -16,4 +16,4 @@ const PublicationSchema = new Schema({
     }
 });
 
-export default model("Publication", PublicationSchema, "publications");
+export default model("PublicationModel", PublicationSchema, "publications");
