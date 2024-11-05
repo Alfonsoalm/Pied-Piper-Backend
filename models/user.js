@@ -6,11 +6,8 @@ const UserSchema = new Schema({
         type: String,
         required: true
     },
-    surname: String,
-    bio: String,
-    nick: {
-        type: String,
-        required: true
+    surname: {
+        type: String
     },
     email: {
         type: String,
@@ -19,6 +16,15 @@ const UserSchema = new Schema({
     password: {
         type: String,
         required: true
+    },
+    bio: {
+        type: String
+    },
+    // Cambiado a un array para permitir múltiples profesiones
+    professions: {
+        type: [String], // Array de strings para múltiples profesiones
+        required: true,
+        default: [] // Opción de inicialización
     },
     role: {
         type: String,

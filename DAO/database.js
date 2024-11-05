@@ -1,6 +1,7 @@
 // Backend/DAO/Database.js
 import mongoose from "mongoose";
 import UserModel from "../models/user.js";
+import CompanyModel from "../models/company.js"; // Importamos el modelo de la empresa
 
 class Database {
   constructor() {
@@ -29,6 +30,7 @@ class Database {
     }
   }
 
+  // Método para registrar un nuevo usuario
   async registerUser(data) {
     try {
       const newUser = new UserModel(data);
@@ -43,6 +45,21 @@ class Database {
     }
   }
 
+  // Método para registrar una nueva empresa
+  async registerCompany(data) {
+    try {
+      const newCompany = new CompanyModel(data);
+      const companyStored = await newCompany.save();
+      companyStored.toObject();
+      delete companyStored.password;
+      return companyStored;
+    } catch (error) {
+      console.error("Error al guardar empresa en la base de datos:", error);
+      throw new Error("Error al guardar empresa");
+    }
+  }
+
+  // Método para buscar un usuario o una empresa por ciertos criterios
   async findOne(model, query) {
     try {
       return await model.findOne(query);
@@ -52,8 +69,39 @@ class Database {
     }
   }
 
+  // Método para actualizar una empresa en la base de datos
+  async updateCompany(companyId, updateData) {
+    try {
+      const updatedCompany = await CompanyModel.findByIdAndUpdate(
+        companyId,
+        updateData,
+        { new: true }
+      );
+      if (!updatedCompany) {
+        throw new Error("Error al actualizar la empresa");
+      }
+      return updatedCompany;
+    } catch (error) {
+      console.error("Error al actualizar la empresa en la base de datos:", error);
+      throw error;
+    }
+  }
 
-
+  // Método para actualizar un usuario en la base de datos (similar al de empresas)
+  async updateUser(userId, updateData) {
+    try {
+      const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      });
+      if (!updatedUser) {
+        throw new Error("Error al actualizar el usuario");
+      }
+      return updatedUser;
+    } catch (error) {
+      console.error("Error al actualizar el usuario en la base de datos:", error);
+      throw error;
+    }
+  }
 }
 
 export default Database;

@@ -14,7 +14,7 @@ class User {
     name = "",
     surname = "",
     bio = "Gran persona",
-    nick = "",
+    professions = [],  // Array de profesiones
     email,
     password,
     role = "role_user",
@@ -23,12 +23,11 @@ class User {
     this.name = name;
     this.surname = surname;
     this.bio = bio;
-    this.nick = nick;
+    this.professions = professions;  // Profesiones
     this.email = email;
     this.password = password;
     this.role = role;
     this.image = image;
-    console.log("Instancia Usuario creada");
   }
 
   async register() {
@@ -36,12 +35,8 @@ class User {
       const db = Database.getInstance();
       // Control de usuarios duplicados
       const existingUser = await db.findOne(UserModel, {
-        $or: [
-          { email: this.email.toLowerCase() },
-          { nick: this.nick.toLowerCase() },
-        ],
-      });
-
+          email: this.email.toLowerCase() 
+        });
       if (existingUser) {
         return {
           status: "error",
@@ -108,6 +103,7 @@ class User {
           name: user.name,
           nick: user.nick,
           email: user.email,
+          isCompany: false,  // Asegurarse de enviar false para los usuarios
         },
         token,
       };
@@ -194,10 +190,7 @@ class User {
     try {
       // Comprobar si ya existe un usuario con el mismo email o nick
       const existingUsers = await UserModel.find({
-        $or: [
-          { email: userToUpdate.email.toLowerCase() },
-          { nick: userToUpdate.nick.toLowerCase() },
-        ],
+          email: userToUpdate.email.toLowerCase()
       });
 
       const userExists = existingUsers.some(
@@ -220,7 +213,7 @@ class User {
         userIdentityId,
         userToUpdate,
         { new: true }
-      );
+      ); 
 
       if (!updatedUser) {
         throw new Error("Error al actualizar el usuario");
@@ -239,43 +232,36 @@ class User {
 
   static async setUserImg(userId, file) {
     if (!file) {
-      throw new Error("Petición no incluye la imagen");
+      throw new Error("No se ha recibido el archivo");
     }
-
-    // Obtener la extensión del archivo
-    const image = file.originalname;
-    const imageSplit = image.split(".");
-    const extension = imageSplit[1].toLowerCase();
-
-    // Validar extensión
-    const validExtensions = ["png", "jpg", "jpeg", "gif"];
-    if (!validExtensions.includes(extension)) {
-      fs.unlinkSync(file.path); // Eliminar el archivo si la extensión no es válida
-      throw new Error("Extensión del fichero inválida");
-    }
-
+  
+    const image = file.filename; // Nombre del archivo subido
+  
     try {
-      // Actualizar el avatar en la base de datos
+      // Actualizar la propiedad "image" en la base de datos
       const userUpdated = await UserModel.findByIdAndUpdate(
         userId,
-        { image: file.filename },
-        { new: true }
+        { image: image },
+        { new: true } // Devolver el nuevo documento actualizado
       );
-
+  
       if (!userUpdated) {
-        throw new Error("Error en la subida del avatar");
+        throw new Error("Error al actualizar el usuario");
       }
-
+  
       return {
         status: "success",
         user: userUpdated,
         file,
       };
     } catch (error) {
-      console.error("Error al subir el avatar:", error);
+      console.error("Error al actualizar la imagen:", error);
       throw new Error("Error al subir el avatar");
     }
   }
+  
+  
+  
 
   static async getUserImg(file) {
     const filePath = path.resolve(`./uploads/avatars/${file}`);

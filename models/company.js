@@ -1,16 +1,10 @@
-// models/company.js
 import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const CompanySchema = new Schema({
-    company_Id: { 
-        type: String, 
-        unique: true, 
-    },
-    legal_Id: { 
+    legal_id: { 
         type: String, 
         required: true, 
-        unique: true, 
     },
     name: { 
         type: String, 
@@ -25,15 +19,26 @@ const CompanySchema = new Schema({
         type: String, 
         required: true, 
     },
-    industry: {
-         type: String 
-        },
+    sectors: {
+        type: [String], // Array de strings que representarán los sectores de la empresa
+        default: [], // Inicializa como un array vacío si no se proporcionan sectores
+        required: true,
+    },
     size: { 
-        type: String 
+        type: String,
     },
     location: { 
         type: String,
         required: true, 
+    },
+    website: { 
+        type: String,
+    },
+    phone: { 
+        type: String,
+    },
+    description: { 
+        type: String,
     },
     created_at: { 
         type: Date, 
@@ -41,4 +46,4 @@ const CompanySchema = new Schema({
     }
 });
 
-export default model('Company', CompanySchema);
+export default model('CompanyModel', CompanySchema, 'companies');

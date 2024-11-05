@@ -3,14 +3,17 @@ import express from "express";
 import multer from "multer";
 import check from "../middlewares/auth.js";
 import User from "../DAO/user.js";
-import validate from "../helpers/validate.js";
+import {validateUser} from "../helpers/validate.js";
 
 const router = express.Router();
 
-// Configuracion de subida
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "./uploads/avatars/");
+    const dir = './uploads/avatars/';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
   },
   filename: (req, file, cb) => {
     cb(null, "avatar-" + Date.now() + "-" + file.originalname);
@@ -24,7 +27,7 @@ const register = async (req, res) => {
   const userData = req.body;
   // Validación avanzada de los datos
   try {
-    validate(userData);
+    validateUser(userData);
   } catch (validationError) {
     return res.status(400).json({
       status: "error",
@@ -116,12 +119,22 @@ const updateUser = async (req, res) => {
 
 const setUserImg = async (req, res) => {
   try {
+    // Verificar que se haya recibido un archivo
+    if (!req.file) {
+      return res.status(400).json({
+        status: "error",
+        message: "No se ha subido ningún archivo",
+      });
+    }
+
+    // Actualizar la imagen del usuario en la base de datos
     const result = await User.setUserImg(req.user.id, req.file);
+
     return res.status(200).json(result);
   } catch (error) {
     return res.status(500).json({
       status: "error",
-      message: error.message,
+      message: error.message || "Error al subir la imagen",
     });
   }
 };
@@ -166,7 +179,7 @@ router.get("/list/:page?", check.auth, getUserList);
 // Ruta para actualizar un usuario
 router.put("/update", check.auth, updateUser);
 // Ruta para subir imagen de un usuario
-router.post("/upload", [check.auth, uploads.single("file0")], setUserImg);
+router.post("/upload",check.auth, setUserImg);
 // Obtener imagen del usuario o avatar
 router.get("/avatar/:file", getUserImg);
 // Obtener el numero de seguidos, seguidores y publicaciones

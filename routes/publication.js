@@ -51,31 +51,36 @@ const removePublication = async (req, res) => {
 
 // Función para obtener publicaciones de un usuario
 const getUserPublications = async (req, res) => {
-    const userId = req.params.id;
-    const page = req.params.page ? parseInt(req.params.page, 10) : 1;
-  
-    try {
-      const result = await Publication.user(userId, page);
-      if (!result.publications.length) {
-        return res.status(404).json({
-          status: "error",
-          message: "No hay publicaciones para este usuario",
-        });
-      }
-  
-      res.status(200).json({
+  const userId = req.params.id;
+  const page = req.params.page ? parseInt(req.params.page, 10) : 1;
+
+  try {
+    const result = await Publication.user(userId, page);
+
+    // Si no hay publicaciones, devolver un array vacío
+    if (!result.publications.length) {
+      return res.status(200).json({
         status: "success",
-        ...result,
-      });
-    } catch (error) {
-      console.error("Error al obtener publicaciones del usuario:", error.message);
-      res.status(500).json({
-        status: "error",
-        message: "Error al obtener publicaciones del usuario",
-        error: error.message,
+        message: "No hay publicaciones para este usuario",
+        publications: [],  // Devolvemos un array vacío en lugar de lanzar un error
+        total: 0,
+        pages: 0,
       });
     }
-  };
+
+    // Si hay publicaciones, devolver los resultados
+    res.status(200).json({
+      status: "success",
+      ...result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error al obtener publicaciones del usuario",
+      error: error.message,
+    });
+  }
+};
 
 // Función para subir imagen de una publicación
 const uploadPublicationImage = async (req, res) => {
