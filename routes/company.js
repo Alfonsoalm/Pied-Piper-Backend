@@ -97,15 +97,40 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Subir avatar de empresa
 const setCompanyImg = async (req, res) => {
   try {
+    // Verificar que se haya recibido un archivo
+    if (!req.file) {
+      return res.status(400).json({
+        status: "error",
+        message: "Petición no incluye la imagen",
+      });
+    }
+
+    // Validar la extensión del archivo
+    const image = req.file.originalname;
+    const extension = image.split(".").pop().toLowerCase();
+
+    if (!["png", "jpg", "jpeg", "gif"].includes(extension)) {
+      // Borrar el archivo subido si no tiene una extensión válida
+      const filepath = req.file.path;
+      fs.unlinkSync(filepath);
+
+      return res.status(400).json({
+        status: "error",
+        message: "Extensión del fichero inválida",
+      });
+    }
+
+    // Llamar al método de la clase `Company` para actualizar la imagen
     const result = await Company.setCompanyImg(req.user.id, req.file);
+
     return res.status(200).json(result);
   } catch (error) {
+    console.error("Error al subir la imagen de la empresa:", error);
     return res.status(500).json({
       status: "error",
-      message: error.message,
+      message: error.message || "Error al subir el avatar de la empresa",
     });
   }
 };
@@ -144,19 +169,57 @@ const getCounters = async (req, res) => {
 
 };
 
+// Obtener lista de empresas con sus sectores
+const getCompaniesWithSectors = async (req, res) => {
+  try {
+    console.log("Intentando obtener la lista de empresas");
+    const companies = await Company.getAllCompanies(); // Llama al método del DAO
+    return res.status(200).json({
+      status: "success",
+      companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener la lista de empresas",
+    });
+  }
+};
+
+const getCompaniesBySector = async (req, res) => {
+  const sector = req.params.sector; // El sector a buscar
+
+  try {
+    const companies = await Company.getCompaniesBySector(sector);
+    return res.status(200).json({
+      status: "success",
+      companies,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener empresas por sector",
+    });
+  }
+};
+
 export default router;
 
 // Ruta para logearse la empresa
-router.post("/register", register); // OK
+router.post("/register", register); 
 // Ruta para logearse la empresa
-router.post("/login", login); // OK
+router.post("/login", login);
 // Ruta para actualizar el perfil de la empresa
-router.put("/update",check.auth, updateProfile); // OK
+router.put("/update",check.auth, updateProfile);
 // Ruta nueva para obtener el perfi
-router.get("/profile/:id", check.auth, getProfile); // ?
+router.get("/profile/:id", check.auth, getProfile);
 // Subir avatar de la empresa
 router.post("/upload", [check.auth, uploads.single("file0")], setCompanyImg);
 // Obtener avatar de la empresa
 router.get("/avatar/:file", getCompanyImg);
 // Ruta nueva para obtener los contadores
-router.get("/counters/:id",check.auth, getCounters);  // ?
+router.get("/counters/:id",check.auth, getCounters);
+// Agrega la nueva ruta para obtener empresas con sectores
+router.get("/list", getCompaniesWithSectors);
+// Nueva ruta para obtener empresas por sector
+router.get("/sector/:sector", getCompaniesBySector);

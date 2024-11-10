@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
-import mongoosePaginate from "mongoose-paginate-v2"; // Importa el plugin
+import mongoosePaginate from "mongoose-paginate-v2";
+import ProfessionalInfoSchema from "./professInfo.js"; // Importar el submodelo
 
 const UserSchema = new Schema({
     name: {
@@ -20,11 +21,10 @@ const UserSchema = new Schema({
     bio: {
         type: String
     },
-    // Cambiado a un array para permitir múltiples profesiones
     professions: {
-        type: [String], // Array de strings para múltiples profesiones
+        type: [String],
         required: true,
-        default: [] // Opción de inicialización
+        default: []
     },
     role: {
         type: String,
@@ -37,6 +37,18 @@ const UserSchema = new Schema({
     created_at: {
         type: Date,
         default: Date.now
+    },
+    birth_date: {
+        type: Date,
+        required: true
+    },
+    location: {
+        type: String,
+        default: ""
+    },
+    professional_info: {
+        type: ProfessionalInfoSchema,
+        default: {}
     }
 });
 

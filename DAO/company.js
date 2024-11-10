@@ -79,7 +79,8 @@ class Company {
 
   async login(companyData) {
     try {
-      const db = Database.getInstance();
+      const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+      console.log("Intentando conectarse a bbdd");
       // Buscar la empresa en la base de datos
       const company = await db.findOne(CompanyModel, {
         email: companyData.email,
@@ -95,7 +96,7 @@ class Company {
       // Verificar la contraseña
       const pwdMatch = await bcrypt.compare(
         companyData.password,
-        company.password,
+        company.password
       );
 
       if (!pwdMatch) {
@@ -133,6 +134,8 @@ class Company {
 
   async updateProfile(companyId, companyToUpdate) {
     try {
+      const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+      console.log("Intentando conectarse a bbdd");
       // Actualizar la empresa en la base de datos
       const updatedCompany = await CompanyModel.findByIdAndUpdate(
         companyId,
@@ -163,13 +166,15 @@ class Company {
 
   static async getProfile(companyId) {
     try {
+      const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+      console.log("Intentando conectarse a bbdd");
       const companyProfile = await CompanyModel.findById(companyId).select(
         "-password -__v"
       );
       if (!companyProfile) {
         throw new Error("No se encontró la empresa");
       }
-      console.log("companytProfile",companyProfile);
+      console.log("companytProfile", companyProfile);
       return companyProfile;
     } catch (error) {
       console.error("Error al obtener el perfil de la empresa:", error);
@@ -197,31 +202,32 @@ class Company {
     if (!file) {
       throw new Error("No se ha proporcionado ninguna imagen");
     }
-  
+    const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+    console.log("Intentando conectarse a bbdd");
     // Obtener la extensión del archivo
     const image = file.originalname;
     const imageSplit = image.split(".");
     const extension = imageSplit[1].toLowerCase();
-  
+
     // Validar extensión
     const validExtensions = ["png", "jpg", "jpeg", "gif"];
     if (!validExtensions.includes(extension)) {
       fs.unlinkSync(file.path); // Eliminar el archivo si la extensión no es válida
       throw new Error("Extensión de archivo inválida");
     }
-  
+
     try {
       // Actualizar el avatar en la base de datos
       const companyUpdated = await CompanyModel.findByIdAndUpdate(
         companyId,
-        { image: file.filename },  // Guardar solo el nombre de archivo
+        { image: file.filename }, // Guardar solo el nombre de archivo
         { new: true }
       );
-  
+
       if (!companyUpdated) {
         throw new Error("Error en la subida del avatar");
       }
-  
+
       return {
         status: "success",
         company: companyUpdated,
@@ -232,11 +238,12 @@ class Company {
       throw new Error("Error al subir el avatar");
     }
   }
-  
 
   static async getCompanyImg(file) {
+    const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+    console.log("Intentando conectarse a bbdd");
     const filePath = path.resolve(`./uploads/avatars/${file}`);
-  
+
     // Verificar si el archivo existe
     return new Promise((resolve, reject) => {
       fs.stat(filePath, (error) => {
@@ -247,7 +254,36 @@ class Company {
         }
       });
     });
-  }  
+  }
+
+  // Obtener todas las empresas
+  static async getAllCompanies() {
+    try {
+      const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+      console.log("Intentando conectarse a bbdd");
+      // Aquí podemos filtrar y seleccionar solo los campos necesarios
+      const companies = await CompanyModel.find().select("name sectors");
+      return companies;
+    } catch (error) {
+      console.error("Error al obtener la lista de empresas:", error);
+      throw new Error("Error al obtener las empresas");
+    }
+  }
+
+  // Obtener empresas segun el sector
+  static async getCompaniesBySector(sector) {
+    try {
+      // Buscar empresas que tengan el sector solicitado
+      const companies = await CompanyModel.find({ sectors: sector }).select(
+        "name location sectors size website phone description image"
+      ); // Puedes ajustar los campos que quieres devolver
+      return companies;
+    } catch (error) {
+      console.error("Error al obtener empresas por sector:", error);
+      throw new Error("Error al obtener empresas por sector");
+    }
+  }
+  
 }
 
 export default Company;

@@ -3,13 +3,14 @@ import express from "express";
 import multer from "multer";
 import check from "../middlewares/auth.js";
 import User from "../DAO/user.js";
-import {validateUser} from "../helpers/validate.js";
+import fs from "fs";
+import { validateUser } from "../helpers/validate.js";
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = './uploads/avatars/';
+    const dir = "./uploads/avatars/";
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -20,7 +21,8 @@ const storage = multer.diskStorage({
   },
 });
 
-const uploads = multer({ storage });
+const uploads = multer({storage});
+
 
 // Registro de usuario
 const register = async (req, res) => {
@@ -106,6 +108,17 @@ const updateUser = async (req, res) => {
   const userIdentityId = req.user.id;
   const userToUpdate = req.body;
 
+  // Ajustar formato de campos
+  if (userToUpdate.preferred_locations) {
+    userToUpdate.preferred_locations = Array.isArray(userToUpdate.preferred_locations)
+      ? userToUpdate.preferred_locations
+      : [userToUpdate.preferred_locations];
+  }
+  if (userToUpdate.distance_range_km) {
+    userToUpdate.distance_range_km = parseInt(userToUpdate.distance_range_km);
+  }
+  console.log(userToUpdate);
+
   try {
     const updateResult = await User.updateUser(userIdentityId, userToUpdate);
     return res.status(200).json(updateResult);
@@ -123,21 +136,38 @@ const setUserImg = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         status: "error",
-        message: "No se ha subido ningún archivo",
+        message: "Petición no incluye la imagen",
       });
     }
 
-    // Actualizar la imagen del usuario en la base de datos
+    // Validar la extensión del archivo
+    const image = req.file.originalname;
+    const extension = image.split(".").pop().toLowerCase();
+
+    if (!["png", "jpg", "jpeg", "gif"].includes(extension)) {
+      // Borrar el archivo subido si no tiene una extensión válida
+      const filepath = req.file.path;
+      fs.unlinkSync(filepath);
+
+      return res.status(400).json({
+        status: "error",
+        message: "Extensión del fichero inválida",
+      });
+    }
+
+    // Llamar al método de la clase `User` para actualizar la imagen
     const result = await User.setUserImg(req.user.id, req.file);
 
     return res.status(200).json(result);
   } catch (error) {
+    console.error("Error al subir la imagen:", error);
     return res.status(500).json({
       status: "error",
-      message: error.message || "Error al subir la imagen",
+      message: error.message || "Error al subir el avatar",
     });
   }
 };
+
 
 const getUserImg = async (req, res) => {
   try {
@@ -152,19 +182,51 @@ const getUserImg = async (req, res) => {
 };
 
 const getCounters = async (req, res) => {
-    const userId = req.params.id || req.user.id;
-    try {
-      const user = new User({});
-      const result = await user.getCounters(userId);
-      return res.status(200).json(result);
-    } catch (error) {
-      console.error("Error en los contadores:", error);
-      return res.status(500).json({
-        status: "error",
-        message: "Error en los contadores",
-      });
-    }
-  };
+  const userId = req.params.id || req.user.id;
+  try {
+    const user = new User({});
+    const result = await user.getCounters(userId);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error en los contadores:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error en los contadores",
+    });
+  }
+};
+ 
+const getAllProfessions = async (req, res) => {
+  try {
+    const professions = await User.getAllProfessions(); // Llama al método en el DAO
+    return res.status(200).json({
+      status: "success",
+      professions,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener las profesiones",
+    });
+  }
+};
+
+const getUsersByProfession = async (req, res) => {
+  const profession = req.params.profession; // La profesión a buscar
+
+  try {
+    const users = await User.getUsersByProfession(profession);
+    return res.status(200).json({
+      status: "success",
+      users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Error al obtener usuarios por profesión",
+    });
+  }
+};
 
 export default router;
 
@@ -179,8 +241,12 @@ router.get("/list/:page?", check.auth, getUserList);
 // Ruta para actualizar un usuario
 router.put("/update", check.auth, updateUser);
 // Ruta para subir imagen de un usuario
-router.post("/upload",check.auth, setUserImg);
+router.post("/upload", [check.auth, uploads.single("file0")], setUserImg);
 // Obtener imagen del usuario o avatar
 router.get("/avatar/:file", getUserImg);
 // Obtener el numero de seguidos, seguidores y publicaciones
 router.get("/counters/:id", check.auth, getCounters);
+// Nueva ruta para obtener todas las profesiones
+router.get("/professions", getAllProfessions);
+// Nueva ruta para obtener usuarios por profesión
+router.get("/profession/:profession", getUsersByProfession);

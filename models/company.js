@@ -40,6 +40,10 @@ const CompanySchema = new Schema({
     description: { 
         type: String,
     },
+    image: { 
+        type: String,
+        default: "default.png", // Puedes establecer un valor predeterminado si deseas
+    },
     created_at: { 
         type: Date, 
         default: Date.now, 

@@ -1,4 +1,3 @@
-// Backend/DAO/user.js
 import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
@@ -14,29 +13,39 @@ class User {
     name = "",
     surname = "",
     bio = "Gran persona",
-    professions = [],  // Array de profesiones
+    professions = [],
     email,
     password,
     role = "role_user",
     image = "default.png",
+    birth_date,
+    location = "",
+    professional_info = {}
   } = {}) {
     this.name = name;
     this.surname = surname;
     this.bio = bio;
-    this.professions = professions;  // Profesiones
+    this.professions = professions;
     this.email = email;
     this.password = password;
     this.role = role;
     this.image = image;
+    this.birth_date = birth_date;
+    this.location = location;
+
+    // Mover `distance_range_km` dentro de `professional_info` si existe
+    this.professional_info = {
+      ...professional_info,
+      distance_range_km: professional_info.distance_range_km || 0
+    };
   }
 
   async register() {
     try {
       const db = Database.getInstance();
-      // Control de usuarios duplicados
       const existingUser = await db.findOne(UserModel, {
-          email: this.email.toLowerCase() 
-        });
+        email: this.email.toLowerCase(),
+      });
       if (existingUser) {
         return {
           status: "error",
@@ -44,13 +53,10 @@ class User {
           statusCode: 409,
         };
       }
-      // Cifrar la contraseña antes de guardarla
       if (this.password) {
         this.password = await bcrypt.hash(this.password, 10);
       }
-      // Guardar usuario usando Database
       const userStored = await db.registerUser(this);
-      // Retornar objeto con resultado exitoso
       return {
         status: "success",
         message: "Usuario registrado correctamente",
@@ -103,7 +109,7 @@ class User {
           name: user.name,
           nick: user.nick,
           email: user.email,
-          isCompany: false,  // Asegurarse de enviar false para los usuarios
+          isCompany: false, // Asegurarse de enviar false para los usuarios
         },
         token,
       };
@@ -182,15 +188,13 @@ class User {
   }
 
   static async updateUser(userIdentityId, userToUpdate) {
-    // Eliminar campos no permitidos para la actualización
     delete userToUpdate.iat;
     delete userToUpdate.exp;
     delete userToUpdate.role;
     delete userToUpdate.image;
     try {
-      // Comprobar si ya existe un usuario con el mismo email o nick
       const existingUsers = await UserModel.find({
-          email: userToUpdate.email.toLowerCase()
+        email: userToUpdate.email.toLowerCase(),
       });
 
       const userExists = existingUsers.some(
@@ -202,18 +206,16 @@ class User {
           message: "El usuario ya existe con el mismo email o nick",
         };
       }
-      // Cifrar la contraseña si se actualiza
       if (userToUpdate.password) {
         userToUpdate.password = await bcrypt.hash(userToUpdate.password, 10);
       } else {
         delete userToUpdate.password;
       }
-      // Buscar y actualizar el usuario en la base de datos
       const updatedUser = await UserModel.findByIdAndUpdate(
         userIdentityId,
         userToUpdate,
         { new: true }
-      ); 
+      );
 
       if (!updatedUser) {
         throw new Error("Error al actualizar el usuario");
@@ -231,12 +233,14 @@ class User {
   }
 
   static async setUserImg(userId, file) {
+    const db = Database.getInstance();
+    console.log("Actualizando imagen en la base de datos");
     if (!file) {
       throw new Error("No se ha recibido el archivo");
     }
-  
+
     const image = file.filename; // Nombre del archivo subido
-  
+
     try {
       // Actualizar la propiedad "image" en la base de datos
       const userUpdated = await UserModel.findByIdAndUpdate(
@@ -244,11 +248,11 @@ class User {
         { image: image },
         { new: true } // Devolver el nuevo documento actualizado
       );
-  
+
       if (!userUpdated) {
         throw new Error("Error al actualizar el usuario");
       }
-  
+
       return {
         status: "success",
         user: userUpdated,
@@ -259,9 +263,6 @@ class User {
       throw new Error("Error al subir el avatar");
     }
   }
-  
-  
-  
 
   static async getUserImg(file) {
     const filePath = path.resolve(`./uploads/avatars/${file}`);
@@ -280,6 +281,8 @@ class User {
 
   async getCounters(userId) {
     try {
+      // Obtener instancia de base de datos
+      const db = Database.getInstance();
       const followingCount = await Follow.countDocuments({ user: userId });
       const followedCount = await Follow.countDocuments({ followed: userId });
       const publicationsCount = await Publication.countDocuments({ user: userId });
@@ -294,6 +297,38 @@ class User {
     } catch (error) {
       console.error("Error al obtener los contadores:", error);
       throw new Error("Error al obtener los contadores");
+    }
+  }
+
+  // Obtener todos los profesionales
+  static async getAllProfessions() {
+    try {
+      // Obtener instancia de base de datos
+      const db = Database.getInstance();
+      // Recuperar todas las profesiones únicas de los usuarios
+      const users = await UserModel.find().select("professions");
+      const allProfessions = users.flatMap((user) => user.professions);
+      const uniqueProfessions = [...new Set(allProfessions)]; // Eliminar duplicados
+      return uniqueProfessions;
+    } catch (error) {
+      console.error("Error al obtener las profesiones:", error);
+      throw new Error("Error al obtener las profesiones");
+    }
+  }
+
+  // Obtener los profesionales por profesion
+  static async getUsersByProfession(profession) {
+    try {
+      // Obtener instancia de base de datos
+      const db = Database.getInstance();
+      // Buscar usuarios que tengan la profesión solicitada
+      const users = await UserModel.find({ professions: profession }).select(
+        "name surname image bio professions location professional_info"
+      ); // Puedes ajustar los campos que quieres devolver
+      return users;
+    } catch (error) {
+      console.error("Error al obtener usuarios por profesión:", error);
+      throw new Error("Error al obtener usuarios por profesión");
     }
   }
 }

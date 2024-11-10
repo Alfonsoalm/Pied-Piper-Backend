@@ -27,6 +27,23 @@ export const validateUser = (params) => {
         }
     }
 
+    // Validación de la fecha de nacimiento (birth_date)
+    if (params.birth_date) {
+        let birthDate = validator.isDate(params.birth_date);
+        if (!birthDate) {
+            throw new Error("La fecha de nacimiento no es válida");
+        }
+    }
+
+    // Validación de residencia habitual (location)
+    if (params.location) {
+        let location = !validator.isEmpty(params.location) &&
+            validator.isLength(params.location, { min: 2 });
+        if (!location) {
+            throw new Error("La residencia habitual no es válida");
+        }
+    }
+
     if (!name || !surname || !email || !password || !professions) {
         throw new Error("No se ha superado la validación");
     }
