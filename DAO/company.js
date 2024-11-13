@@ -80,7 +80,6 @@ class Company {
   async login(companyData) {
     try {
       const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
-      console.log("Intentando conectarse a bbdd");
       // Buscar la empresa en la base de datos
       const company = await db.findOne(CompanyModel, {
         email: companyData.email,
@@ -92,13 +91,18 @@ class Company {
           statusCode: 404,
         };
       }
+      console.log("Email ingresado:", companyData.email);
+      console.log("Contraseña ingresada:", companyData.password);
+      console.log("Contraseña almacenada en DB:", company.password);
 
       // Verificar la contraseña
       const pwdMatch = await bcrypt.compare(
         companyData.password,
         company.password
       );
-
+      
+      console.log("Resultado de comparación:", pwdMatch);
+      
       if (!pwdMatch) {
         return {
           status: "error",

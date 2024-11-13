@@ -228,8 +228,6 @@ const getUsersByProfession = async (req, res) => {
   }
 };
 
-export default router;
-
 // Rutas para guardar datos de nuevo usuario a la base de datos
 router.post("/register", register);
 // Ruta para realizar el login de un usuario y obtener token de autenticacion
@@ -250,3 +248,5 @@ router.get("/counters/:id", check.auth, getCounters);
 router.get("/professions", getAllProfessions);
 // Nueva ruta para obtener usuarios por profesión
 router.get("/profession/:profession", getUsersByProfession);
+
+export default router;

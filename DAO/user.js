@@ -32,7 +32,6 @@ class User {
     this.image = image;
     this.birth_date = birth_date;
     this.location = location;
-
     // Mover `distance_range_km` dentro de `professional_info` si existe
     this.professional_info = {
       ...professional_info,

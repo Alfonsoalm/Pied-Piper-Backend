@@ -1,44 +1,181 @@
+import Database from "./database.js"; // Asegúrate de importar tu clase Database
+import OfferModel from "../models/offer.js"; // Importa tu modelo de oferta
 
-// Clase que recoge los metodos relacionados con las ofertas y sus datos
 class Offer {
-    constructor({ id, title, description, salary, required_skills = [], employment_type, location }) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.salary = salary;
-        this.required_skills = required_skills;
-        this.employment_type = employment_type;
-        this.location = location;
-    }
+  constructor({
+    title = "",
+    description = [],
+    company,
+    location = "",
+    salaryRange = { min: 0, max: 0 },
+    workType = "onsite",
+    schedule = { min: 0, max: 0 },
+    jobFunctions = [],
+    contractType = "temporary",
+    targetUser,
+    timeLimit = 0,
+    status = "pending",
+  } = {}) {
+    this.title = title;
+    this.description = description;
+    this.company = company;
+    this.location = location;
+    this.salaryRange = salaryRange;
+    this.workType = workType;
+    this.schedule = schedule;
+    this.jobFunctions = jobFunctions;
+    this.contractType = contractType;
+    this.targetUser = targetUser;
+    this.timeLimit = timeLimit;
+    this.status = status;
+  }
 
-    // Crear oferta
-    static create(data) {
-        const newOffer = new Offer(data);
-        localStorage.setItem(`offer_${newOffer.id}`, JSON.stringify(newOffer));
-        return newOffer;
-    }
+  // Metodo para registrar una oferta
+  async register() {
+    try {
+      const db = Database.getInstance();
 
-    // Actualizar oferta
-    updateOffer({ title, description, salary, required_skills, employment_type, location }) {
-        this.title = title || this.title;
-        this.description = description || this.description;
-        this.salary = salary || this.salary;
-        this.required_skills = required_skills || this.required_skills;
-        this.employment_type = employment_type || this.employment_type;
-        this.location = location || this.location;
-        this.saveToLocal();
-    }
+      // Verificar si ya existe una oferta similar (opcional, según tu lógica de negocio)
+      const existingOffer = await db.findOne(OfferModel, {
+        title: this.title.toLowerCase(),
+        company: this.company,
+        targetUser: this.targetUser,
+      });
 
-    // Guardar en localStorage
-    saveToLocal() {
-        localStorage.setItem(`offer_${this.id}`, JSON.stringify(this));
-    }
+      if (existingOffer) {
+        return {
+          status: "error",
+          message: "La oferta ya existe para este usuario y empresa",
+          statusCode: 409,
+        };
+      }
 
-    // Cargar desde localStorage
-    static loadFromLocal(id) {
-        const data = JSON.parse(localStorage.getItem(`offer_${id}`));
-        return data ? new Offer(data) : null;
+      // Registrar la oferta
+      const offerStored = await db.registerOffer(this);
+      return {
+        status: "success",
+        message: "Oferta registrada correctamente",
+        offer: offerStored,
+      };
+    } catch (error) {
+      console.error("Error al registrar la oferta:", error);
+      return {
+        status: "error",
+        message: "Error en el registro de la oferta",
+        statusCode: 500,
+      };
     }
+  }
+
+  // Metodo para obtener la oferta por su Id
+  static async getOfferById(id) {
+    try {
+      const db = Database.getInstance();
+      const offer = await db.findById(OfferModel, id);
+      return offer;
+    } catch (error) {
+      console.error("Error al obtener la oferta por ID:", error);
+      throw new Error("Error al obtener la oferta");
+    }
+  }
+
+  // Método para obtener todas las ofertas
+  static async getAllOffers() {
+    try {
+      const db = Database.getInstance();
+      const offers = await db.getAll(OfferModel);
+      return offers;
+    } catch (error) {
+      console.error("Error al obtener todas las ofertas:", error);
+      throw new Error("Error al obtener todas las ofertas");
+    }
+  }
+
+  // Metodo para actualizar las ofertas
+  static async updateOffer(offerId, offerData) {
+    try {
+      // Validaciones adicionales si es necesario
+      // Puedes validar aquí si ciertos campos no deben cambiar, si es necesario
+      if (offerData.company || offerData.targetUser) {
+        delete offerData.company; // No permitimos cambiar la empresa
+        delete offerData.targetUser; // No permitimos cambiar el usuario objetivo
+      }
+
+      // Instancia de base de datos
+      const db = Database.getInstance();
+
+      // Llamar al método genérico `update` de la base de datos
+      const updatedOffer = await db.update(OfferModel, offerId, offerData);
+
+      if (!updatedOffer) {
+        return {
+          status: "error",
+          message: "Error al actualizar la oferta o la oferta no existe",
+        };
+      }
+      return {
+        status: "success",
+        message: "Oferta actualizada correctamente",
+        offer: updatedOffer,
+      };
+    } catch (error) {
+      console.error("Error al actualizar la oferta:", error);
+      throw new Error("Error en el proceso de actualización de la oferta");
+    }
+  }
+
+  // Método para obtener ofertas dirigidas a un usuario específico
+  static async getOffersForUser(userId) {
+    try {
+      const db = Database.getInstance();
+
+      // Buscar ofertas donde el campo targetUser coincida con el userId proporcionado
+      const offers = await db.findMany(OfferModel, { targetUser: userId });
+
+      return offers;
+    } catch (error) {
+      console.error("Error al obtener ofertas para el usuario:", error);
+      throw new Error("Error al obtener ofertas para el usuario");
+    }
+  }
+
+  // Método para actualizar el estado de una oferta
+  static async updateOfferStatus(offerId, status) {
+    try {
+      const db = Database.getInstance();
+
+      // Validar si existe la oferta
+      const existingOffer = await db.findById(OfferModel, offerId);
+      if (!existingOffer) {
+        return {
+          status: "error",
+          message: "Oferta no encontrada",
+          statusCode: 404,
+        };
+      }
+
+      // Actualizar solo el campo 'status'
+      const updatedOffer = await db.update(OfferModel, offerId, { status });
+
+      if (!updatedOffer) {
+        return {
+          status: "error",
+          message: "Error al actualizar el estado de la oferta",
+        };
+      }
+
+      return {
+        status: "success",
+        message: "Estado de la oferta actualizado correctamente",
+        offer: updatedOffer,
+      };
+    } catch (error) {
+      console.error("Error al actualizar el estado de la oferta:", error);
+      throw new Error(
+        "Error en el proceso de actualización del estado de la oferta"
+      );
+    }
+  }
 }
 
 export default Offer;

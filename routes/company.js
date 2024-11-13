@@ -32,7 +32,6 @@ const register = async (req, res) => {
   }
 
   const company = new Company(companyData);
-
   const result = await company.register();
   
   if (result.status === "success") {
@@ -203,8 +202,6 @@ const getCompaniesBySector = async (req, res) => {
   }
 };
 
-export default router;
-
 // Ruta para logearse la empresa
 router.post("/register", register); 
 // Ruta para logearse la empresa
@@ -223,3 +220,5 @@ router.get("/counters/:id",check.auth, getCounters);
 router.get("/list", getCompaniesWithSectors);
 // Nueva ruta para obtener empresas por sector
 router.get("/sector/:sector", getCompaniesBySector);
+
+export default router;

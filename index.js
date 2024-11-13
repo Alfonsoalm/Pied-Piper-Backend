@@ -5,6 +5,7 @@ import cors from "cors";
 import UserRoutes from "./routes/user.js";
 import PublicationRoutes from"./routes/publication.js";
 import FollowRoutes from"./routes/follow.js";
+import OfferRoutes from"./routes/offer.js";
 import CompanyRoutes from "./routes/company.js";
 
 // Mensaje bienvenida
@@ -24,8 +25,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true})); 
 app.use("/api/user", UserRoutes);
 app.use("/api/publication", PublicationRoutes);
-app.use("/api/follow", FollowRoutes);
 app.use("/api/company", CompanyRoutes);
+app.use("/api/offer", OfferRoutes);
+app.use("/api/follow", FollowRoutes); 
 
 // Poner servidor a escuchar peticiones http
 app.listen(puerto, () => {
