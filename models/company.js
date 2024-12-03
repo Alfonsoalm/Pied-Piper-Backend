@@ -44,10 +44,20 @@ const CompanySchema = new Schema({
         type: String,
         default: "default.png", // Puedes establecer un valor predeterminado si deseas
     },
+    // Token de verificación
+    verificationToken: { 
+        type: String, 
+        default: null 
+    }, 
+    // Estado de verificación
+    verified: { 
+        type: Boolean, 
+        default: false 
+    }, 
     created_at: { 
         type: Date, 
         default: Date.now, 
-    }
+    },
 });
 
 export default model('CompanyModel', CompanySchema, 'companies');

@@ -1,8 +1,10 @@
 // Backend/DAO/company.js
 import bcrypt from "bcryptjs";
+import crypto from "crypto"; // Para generar un token único
 import jwt from "../services/jwt.js";
 import CompanyModel from "../models/company.js";
 import Database from "./database.js";
+import { sendVerificationEmail } from "../services/email.js";
 
 class Company {
   constructor({
@@ -16,6 +18,8 @@ class Company {
     website = "",
     phone = "",
     description = "",
+    verificationToken = "",
+    verified = "",
   } = {}) {
     this.legal_id = legal_id;
     this.name = name;
@@ -27,6 +31,8 @@ class Company {
     this.website = website;
     this.phone = phone;
     this.description = description;
+    this.verificationToken = verificationToken;
+    this.verified = verified;
     console.log("Instancia Empresa creada");
   }
 
@@ -54,12 +60,22 @@ class Company {
         this.password = await bcrypt.hash(this.password, 10);
       }
 
-      // Guardar empresa en la base de datos
-      const companyStored = await db.registerCompany(this);
+      // Crear un token de verificación único
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+
+      // Guardar la empresa en la base de datos con el token de verificación
+      const companyStored = await db.registerCompany({
+        ...this,
+        verificationToken: verificationToken,
+        verified: false, // Inicialmente no está verificada
+      });
+
+      // Enviar correo electrónico con el token de verificación
+      await sendVerificationEmail(this.email, verificationToken);
 
       return {
         status: "success",
-        message: "Empresa registrada correctamente",
+        message: "Empresa registrada correctamente. Por favor verifica tu correo electrónico.",
         company: {
           id: companyStored._id,
           name: companyStored.name,
@@ -73,6 +89,38 @@ class Company {
         status: "error",
         message: "Error en el registro de la empresa",
         statusCode: 500,
+      };
+    }
+  }
+
+  async verify(token){
+    console.log("Verificando empresa DAO verify");
+
+    try {
+      const db = Database.getInstance();
+      const company = await db.findOne(CompanyModel, { verificationToken: token });
+  
+      if (!company) {
+        return {
+          status: "error",
+          message: "Token de verificación inválido o expirado.",
+        };
+      }
+  
+      // Marcar la cuenta como verificada
+      company.verified = true;
+      company.verificationToken = null; // Eliminar el token después de la verificación
+      await company.save();
+  
+      return {
+        status: "success",
+        message: "Cuenta verificada correctamente.",
+      };
+    } catch (error) {
+      console.error("Error al verificar la cuenta:", error);
+      return {
+        status: "error",
+        message: "Error al verificar la cuenta.",
       };
     }
   }

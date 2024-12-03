@@ -18,8 +18,10 @@ const storage = multer.diskStorage({
 });
 const uploads = multer({ storage });
 
+
 // Registro de empresa
 const register = async (req, res) => {
+  console.log("Registrando empresa: register");
   const companyData = req.body;
   // Validación avanzada de los datos
   try {
@@ -30,17 +32,33 @@ const register = async (req, res) => {
       message: "Datos no válidos: " + validationError.message,
     });
   }
-
   const company = new Company(companyData);
   const result = await company.register();
-  
   if (result.status === "success") {
     return res.status(201).json(result);
   } else {
     return res.status(result.statusCode || 500).json(result);
   }
+};
+
+
+// Verificacion de la empresa registrada
+const verify = async (req, res) => {
+  console.log("Verificando empresa: verify");
+  const { token } = req.params;
+  const company = new Company(); 
+  const result = await company.verify(token);
+  
+  if (result.status === "success") {
+    console.log("Verificacion exitosa")
+    // return res.redirect("http://localhost:5173/verified-success");
+    return res.status(200).json(result);
+  } else {
+    return res.status(result.statusCode || 500).json(result);
+  }
 
 };
+
 
 // Login de empresa
 const login = async (req, res) => {
@@ -55,6 +73,7 @@ const login = async (req, res) => {
     return res.status(result.statusCode || 500).json(result);
   }
 };
+
 
 // Actualizar perfil de empresa
 const updateProfile = async (req, res) => {
@@ -71,9 +90,11 @@ const updateProfile = async (req, res) => {
   }
 };
 
+
 // Obtener el perfil de una empresa
 const getProfile = async (req, res) => {
   const companyId = req.params.id; // ID de la empresa
+  console.log("obtiene perfil de empresa");
   
   try {
     const user = await Company.getProfile(companyId); // Usar método para obtener perfil
@@ -95,6 +116,7 @@ const getProfile = async (req, res) => {
     });
   }
 };
+
 
 const setCompanyImg = async (req, res) => {
   try {
@@ -204,6 +226,8 @@ const getCompaniesBySector = async (req, res) => {
 
 // Ruta para logearse la empresa
 router.post("/register", register); 
+// Verificar empresa
+router.get("/verify/:token", verify);
 // Ruta para logearse la empresa
 router.post("/login", login);
 // Ruta para actualizar el perfil de la empresa

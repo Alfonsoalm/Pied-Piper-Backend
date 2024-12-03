@@ -30,6 +30,6 @@ app.use("/api/offer", OfferRoutes);
 app.use("/api/follow", FollowRoutes); 
 
 // Poner servidor a escuchar peticiones http
-app.listen(puerto, () => {
+app.listen(puerto, "0.0.0.0", () => {
     console.log("Servidor de node corriendo en el puerto: ", puerto);
 });
