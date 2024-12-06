@@ -249,44 +249,35 @@ class Company {
   }
 
   static async setCompanyImg(companyId, file) {
+    const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
+    console.log("Intentando conectarse a bbdd");
     if (!file) {
       throw new Error("No se ha proporcionado ninguna imagen");
     }
-    const db = Database.getInstance(); // Esto llama al constructor y, a su vez, al método connect()
-    console.log("Intentando conectarse a bbdd");
     // Obtener la extensión del archivo
-    const image = file.originalname;
-    const imageSplit = image.split(".");
-    const extension = imageSplit[1].toLowerCase();
-
-    // Validar extensión
-    const validExtensions = ["png", "jpg", "jpeg", "gif"];
-    if (!validExtensions.includes(extension)) {
-      fs.unlinkSync(file.path); // Eliminar el archivo si la extensión no es válida
-      throw new Error("Extensión de archivo inválida");
-    }
-
+    const image = file.filename;
     try {
-      // Actualizar el avatar en la base de datos
+      // Actualizar la propiedad "image" en la base de datos
       const companyUpdated = await CompanyModel.findByIdAndUpdate(
         companyId,
-        { image: file.filename }, // Guardar solo el nombre de archivo
-        { new: true }
+        { image: image },
+        { new: true } // Devolver el nuevo documento actualizado
       );
 
       if (!companyUpdated) {
-        throw new Error("Error en la subida del avatar");
+        throw new Error("Error al actualizar la empresa");
       }
 
       return {
         status: "success",
-        company: companyUpdated,
+        user: companyUpdated,
         file,
       };
     } catch (error) {
-      console.error("Error al subir el avatar:", error);
+      console.error("Error al actualizar la imagen:", error);
       throw new Error("Error al subir el avatar");
     }
+
   }
 
   static async getCompanyImg(file) {
