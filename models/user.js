@@ -34,6 +34,16 @@ const UserSchema = new Schema({
         type: String,
         default: "default.png"
     },
+    // Token de verificación
+    verificationToken: { 
+        type: String, 
+        default: null 
+    }, 
+    // Estado de verificación
+    verified: { 
+        type: Boolean, 
+        default: false 
+    }, 
     created_at: {
         type: Date,
         default: Date.now
@@ -49,7 +59,15 @@ const UserSchema = new Schema({
     professional_info: {
         type: ProfessionalInfoSchema,
         default: {}
-    }
+    },
+    reset_token: {
+        type: String,
+        default: null, // El token es nulo por defecto
+    },
+    reset_expires: {
+        type: Date,
+        default: null, // La expiración es nula por defecto
+    },
 });
 
 // Aplicar el plugin de paginación al esquema

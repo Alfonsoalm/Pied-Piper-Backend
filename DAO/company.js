@@ -77,10 +77,7 @@ class Company {
         status: "success",
         message: "Empresa registrada correctamente. Por favor verifica tu correo electrónico.",
         company: {
-          id: companyStored._id,
-          name: companyStored.name,
-          email: companyStored.email,
-          legal_id: companyStored.legal_id,
+          companyStored
         },
       };
     } catch (error) {
@@ -170,6 +167,7 @@ class Company {
           name: company.name,
           email: company.email,
           legal_id: company.legal_id,
+          verified: company.verified,
           isCompany: true, // Asegurarse de enviar false para los usuarios
         },
         token,
@@ -335,7 +333,68 @@ class Company {
       throw new Error("Error al obtener empresas por sector");
     }
   }
-  
+
+
+  static async generatePasswordResetToken(email) {
+    // Obtener instancia del DAO
+    const db = Database.getInstance();
+
+    // Buscar empresa por correo
+    const company = await db.findOne(CompanyModel, { email: email.toLowerCase() });
+    if (!company) {
+      throw new Error("No se encontró una empresa con ese correo electrónico.");
+    }
+
+    // Generar token único
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = Date.now() + 3600000; // Expira en 1 hora
+
+    // Actualizar el usuario con el token y la expiración usando updateUser
+    const updatedCompany = await db.updatedCompany(company._id, {
+      reset_token: token,
+      reset_expires: expires,
+    });
+
+    if (!updatedCompany) {
+      throw new Error("Error al guardar el token de recuperación.");
+    }
+
+    // Enviar el correo de recuperación
+    await sendPasswordResetEmail(email, token);
+
+    return token;
+  }
+
+  static async resetPassword(token, newPassword) {
+    const db = Database.getInstance();
+
+    // Buscar la empresa por el token
+    const company = await db.findOne(CompanyModel, { reset_token: token });
+    if (!company) {
+      throw new Error("Token inválido o empresa no encontrada.");
+    }
+
+    // Verificar si el token ha expirado
+    if (Date.now() > company.reset_expires) {
+      throw new Error("El token ha expirado.");
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña y limpiar el token
+    const updatedCompany = await db.updateCompany(company._id, {
+      password: hashedPassword,
+      reset_token: null,
+      reset_expires: null,
+    });
+
+    if (!updatedCompany) {
+      throw new Error("Error al actualizar la contraseña.");
+    }
+
+    return true;
+  }
 }
 
 export default Company;

@@ -58,6 +58,14 @@ const CompanySchema = new Schema({
         type: Date, 
         default: Date.now, 
     },
+    reset_token: {
+        type: String,
+        default: null, // El token es nulo por defecto
+    },
+    reset_expires: {
+        type: Date,
+        default: null, // La expiración es nula por defecto
+    },
 });
 
 export default model('CompanyModel', CompanySchema, 'companies');

@@ -224,6 +224,60 @@ const getCompaniesBySector = async (req, res) => {
   }
 };
 
+const requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({
+      status: "error",
+      message: "Debe proporcionar un correo electrónico.",
+    });
+  }
+
+  try {
+    // Generar un token único para el reinicio de contraseña
+    await Company.generatePasswordResetToken(email); // Método que genera y guarda el token en DB
+
+    return res.status(200).json({
+      status: "success",
+      message: "Se ha enviado un enlace de recuperación a su correo electrónico.",
+    });
+  } catch (error) {
+    console.error("Error en recuperación de contraseña para empresa:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Hubo un problema al procesar la solicitud.",
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({
+      status: "error",
+      message: "Token y nueva contraseña son requeridos.",
+    });
+  }
+
+  try {
+    await Company.resetPassword(token, password);
+    return res.status(200).json({
+      status: "success",
+      message: "La contraseña se ha restablecido correctamente.",
+    });
+  } catch (error) {
+    console.error(
+      "Error en el restablecimiento de contraseña de la empresa:",
+      error
+    );
+    return res.status(400).json({
+      status: "error",
+      message: error.message || "Error al procesar la solicitud.",
+    });
+  }
+};
+
 // Ruta para logearse la empresa
 router.post("/register", register); 
 // Verificar empresa
@@ -244,5 +298,9 @@ router.get("/counters/:id",check.auth, getCounters);
 router.get("/list", getCompaniesWithSectors);
 // Nueva ruta para obtener empresas por sector
 router.get("/sector/:sector", getCompaniesBySector);
+// Ruta para recuperar la contraseña
+router.post("/forgot-password", requestPasswordReset);
+// Ruta para resetear la contraseña
+router.post("/reset-password", resetPassword);
 
 export default router;

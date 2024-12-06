@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto"; // Para generar un token único
 import fs from "fs";
 import path from "path";
 import jwt from "../services/jwt.js";
@@ -7,6 +8,8 @@ import UserModel from "../models/user.js";
 import Follow from "../models/follow.js";
 import Publication from "../models/publication.js";
 import Database from "./database.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email.js";
+
 
 class User {
   constructor({
@@ -55,19 +58,29 @@ class User {
       if (this.password) {
         this.password = await bcrypt.hash(this.password, 10);
       }
-      const userStored = await db.registerUser(this);
+
+      // Crear un token de verificación único
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+
+      // Guardar el profesional en la base de datos con el token de verificación
+      const userStored = await db.registerUser({
+        ...this,
+        verificationToken: verificationToken,
+        verified: false,        
+      });
+
+      // Enviar correo electrónico con el token de verificación
+      await sendVerificationEmail(this.email, verificationToken);
+
       return {
         status: "success",
         message: "Usuario registrado correctamente",
         user: {
-          id: userStored._id,
-          name: userStored.name,
-          nick: userStored.nick,
-          email: userStored.email,
+          userStored
         },
       };
     } catch (error) {
-      console.error("Error al registrar usuario:", error);
+      console.log("Error al registrar usuario:", error);
       return {
         status: "error",
         message: "Error en el registro de usuario",
@@ -75,6 +88,39 @@ class User {
       };
     }
   }
+
+  async verify(token){
+    console.log("Verificando empresa DAO verify");
+
+    try {
+      const db = Database.getInstance();
+      const user = await db.findOne(UserModel, { verificationToken: token });
+  
+      if (!user) {
+        return {
+          status: "error",
+          message: "Token de verificación inválido o expirado.",
+        };
+      }
+  
+      // Marcar la cuenta como verificada
+      user.verified = true;
+      user.verificationToken = null; // Eliminar el token después de la verificación
+      await user.save();
+  
+      return {
+        status: "success",
+        message: "Cuenta verificada correctamente.",
+      };
+    } catch (error) {
+      console.error("Error al verificar la cuenta:", error);
+      return {
+        status: "error",
+        message: "Error al verificar la cuenta.",
+      };
+    }
+  }
+
 
   async login(userData) {
     try {
@@ -100,6 +146,7 @@ class User {
       }
       // Generar token si la autenticación es exitosa
       const token = jwt.createToken(user);
+
       return {
         status: "success",
         message: "Usuario identificado correctamente",
@@ -108,6 +155,7 @@ class User {
           name: user.name,
           nick: user.nick,
           email: user.email,
+          verified: user.verified,
           isCompany: false, // Asegurarse de enviar false para los usuarios
         },
         token,
@@ -329,6 +377,67 @@ class User {
       console.error("Error al obtener usuarios por profesión:", error);
       throw new Error("Error al obtener usuarios por profesión");
     }
+  }
+
+  static async generatePasswordResetToken(email) {
+    // Obtener instancia del DAO
+    const db = Database.getInstance();
+
+    // Buscar al usuario por correo
+    const user = await db.findOne(UserModel, { email: email.toLowerCase() });
+    if (!user) {
+      throw new Error("No se encontró un usuario con ese correo electrónico.");
+    }
+
+    // Generar el token único y la fecha de expiración
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = Date.now() + 3600000; // Expira en 1 hora
+
+    // Actualizar el usuario con el token y la expiración usando updateUser
+    const updatedUser = await db.updateUser(user._id, {
+      reset_token: token,
+      reset_expires: expires,
+    });
+
+    if (!updatedUser) {
+      throw new Error("Error al guardar el token de recuperación.");
+    }
+
+    // Enviar el correo de recuperación
+    await sendPasswordResetEmail(email, token);
+
+    return token;
+  }
+
+  static async resetPassword(token, newPassword) {
+    const db = Database.getInstance();
+
+    // Buscar al usuario por el token
+    const user = await db.findOne(UserModel, { reset_token: token });
+    if (!user) {
+      throw new Error("Token inválido o usuario no encontrado.");
+    }
+
+    // Verificar si el token ha expirado
+    if (Date.now() > user.reset_expires) {
+      throw new Error("El token ha expirado.");
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña y limpiar el token
+    const updatedUser = await db.updateUser(user._id, {
+      password: hashedPassword,
+      reset_token: null,
+      reset_expires: null,
+    });
+
+    if (!updatedUser) {
+      throw new Error("Error al actualizar la contraseña.");
+    }
+
+    return true;
   }
 }
 
