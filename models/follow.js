@@ -1,18 +1,9 @@
 import { Schema, model } from "mongoose";
 
 const FollowSchema = new Schema({
-    user: {
-        type: Schema.ObjectId,
-        ref: "User"
-    },
-    followed: {
-        type: Schema.ObjectId,
-        ref: "User"
-    },
-    created_at: {
-        type: Date,
-        default: Date.now
-    }
+    user: { type: Schema.ObjectId, ref: "UserModel" }, // Cambiado a "UserModel"
+    followed: { type: Schema.ObjectId, ref: "UserModel" }, // Cambiado a "UserModel"
+    created_at: { type: Date, default: Date.now },
 });
 
 export default model("Follow", FollowSchema, "follows");

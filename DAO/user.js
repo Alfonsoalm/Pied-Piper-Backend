@@ -102,12 +102,11 @@ class User {
           message: "Token de verificación inválido o expirado.",
         };
       }
-  
       // Marcar la cuenta como verificada
       user.verified = true;
       user.verificationToken = null; // Eliminar el token después de la verificación
       await user.save();
-  
+
       return {
         status: "success",
         message: "Cuenta verificada correctamente.",

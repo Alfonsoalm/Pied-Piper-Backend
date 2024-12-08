@@ -7,6 +7,7 @@ import PublicationRoutes from"./routes/publication.js";
 import FollowRoutes from"./routes/follow.js";
 import OfferRoutes from"./routes/offer.js";
 import CompanyRoutes from "./routes/company.js";
+import MessageRoutes from "./routes/message.js";
 
 // Mensaje bienvenida
 console.log("API NODE para RED SOCIAL arrancada!!");
@@ -28,6 +29,7 @@ app.use("/api/publication", PublicationRoutes);
 app.use("/api/company", CompanyRoutes);
 app.use("/api/offer", OfferRoutes);
 app.use("/api/follow", FollowRoutes); 
+app.use("/api/message", MessageRoutes);
 
 // Poner servidor a escuchar peticiones http
 app.listen(puerto, "0.0.0.0", () => {

@@ -7,6 +7,7 @@ const router = express.Router();
 
 // Controlador para guardar un follow
 const saveFollow = async (req, res) => {
+  console.log("/save");
   const params = req.body;
   const identity = req.user;
 
@@ -27,6 +28,7 @@ const saveFollow = async (req, res) => {
 
 // Controlador para eliminar un follow
 const unfollow = async (req, res) => {
+  console.log("/unfollow/:id");
   const userId = req.user.id;
   const followedId = req.params.id;
 
@@ -43,12 +45,14 @@ const unfollow = async (req, res) => {
 
 // Controlador para listar usuarios que un usuario sigue
 const getFollowing = async (req, res) => {
+  console.log("/following/:id?/:page?");
   let userId = req.user.id;
   if (req.params.id) userId = req.params.id;
   const page = req.params.page || 1;
 
   try {
     const response = await Follow.following(userId, page);
+    console.log(response);
     return res.status(200).json({
       status: "success",
       message: "Listado de usuarios que sigo",
@@ -64,6 +68,7 @@ const getFollowing = async (req, res) => {
 
 // Controlador para listar seguidores de un usuario
 const getFollowers = async (req, res) => {
+  console.log("/followers/:id?/:page?");
   let userId = req.user.id;
   if (req.params.id) userId = req.params.id;
   const page = req.params.page || 1;
