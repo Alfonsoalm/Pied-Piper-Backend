@@ -200,6 +200,17 @@ class User {
     }
   }
 
+  static async getUserById(userId) {
+    try {
+      const db = Database.getInstance();
+      const user = await UserModel.findById(userId).select("name surname image bio");
+      return user;
+    } catch (error) {
+      console.error("Error al obtener el usuario por ID:", error);
+      throw new Error("Error al obtener los detalles del usuario");
+    }
+  }
+
   static async getUserList(requesterId, page = 1, itemsPerPage = 5) {
     try {
       // Realizar la consulta paginada para obtener usuarios

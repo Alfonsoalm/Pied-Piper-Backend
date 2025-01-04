@@ -168,6 +168,30 @@ const setUserImg = async (req, res) => {
   }
 };
 
+// Controlador para obtener detalles del usuario por ID
+const getUserById = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const userDetails = await User.getUserById(userId); // Llama a la función en el DAO
+    if (!userDetails) {
+      return res.status(404).json({
+        status: "error",
+        message: "Usuario no encontrado",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      user: userDetails,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message || "Error al obtener los detalles del usuario",
+    });
+  }
+};
 
 const getUserImg = async (req, res) => {
   try {
@@ -305,5 +329,7 @@ router.get("/profession/:profession", getUsersByProfession);
 router.post("/forgot-password", requestPasswordReset);
 // Ruta para resetear la contraseña
 router.post("/reset-password", resetPassword);
+// Nueva ruta para obtener detalles de un usuario por ID
+router.get("/:id", getUserById);
 
 export default router;
